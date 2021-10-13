@@ -3,7 +3,7 @@
 
 import time
 from flask import Flask, jsonify, request
-flask_pymongo import PyMongo, ObjectId
+from flask_pymongo import PyMongo, ObjectId
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://todo-db-0.todo-db,todo-db-1.todo-db,todo-db-2.todo-db:27017"
