@@ -1,0 +1,48 @@
+{% set suffix = '-canary' if env.CANARY else '' %}
+{% set name = '%s%s' % (service.name, suffix) %}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{name}}
+spec:
+  selector:
+    app: {{name}}
+  ports:
+    - protocol: {{service.protocol or 'TCP'}}
+      port: {{service.port or '80'}}
+      targetPort: {{service.targetPort or '8080'}}
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: {name: {{name}}}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: {{name}}}
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels: {app: {{name}}}
+      name: {{name}}
+    spec:
+      containers:
+      - image: {{build.images["Dockerfile"]}}
+        imagePullPolicy: IfNotPresent
+        name: {{service.name}}
+        resources:
+          requests:
+            memory: {{service.min_memory}}
+            cpu: {{service.min_cpu}}
+          limits:
+            memory: {{service.max_memory}}
+            cpu: {{service.max_cpu}}
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
